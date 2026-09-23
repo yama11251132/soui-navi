@@ -1,0 +1,1053 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>創意工夫ナビ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{color-scheme:light}
+[hidden]{display:none!important}
+body{margin:0}
+
+:root{
+  --ground:#F2F3EF; --surface:#FFFFFF; --sunk:#E8EAE4; --ink:#1B2225; --muted:#5A6468; --line:#D5D9D2;
+  --accent:#1B5E7A; --accent-ink:#FFFFFF; --mark:#E3A21A; --mark-soft:#FBF1D6;
+  --ok:#2F7A3B; --warn:#B7791F; --bad:#B23A1B;
+  --c-seko:#1B5E7A; --c-hinshitsu:#3C7A36; --c-anzen:#C0461B; --c-kankyo:#2A7A6C; --c-ict:#6A4C93; --c-chiiki:#9C5B22;
+  --font-body:"BIZ UDPGothic","Hiragino Sans","Yu Gothic",Meiryo,sans-serif;
+  --font-display:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic",sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --ground:#141A1C; --surface:#1C2427; --sunk:#232C30; --ink:#E6EAE7; --muted:#9AA5A8; --line:#313C40;
+    --accent:#5FA9C9; --accent-ink:#0E1416; --mark:#F0B83A; --mark-soft:#3A3120;
+    --ok:#6DBB78; --warn:#E0A94A; --bad:#EE7B5B;
+    --c-seko:#6BB0CF; --c-hinshitsu:#7FC274; --c-anzen:#EE7B5B; --c-kankyo:#5FC2AF; --c-ict:#B69BDD; --c-chiiki:#D9975A;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --ground:#141A1C; --surface:#1C2427; --sunk:#232C30; --ink:#E6EAE7; --muted:#9AA5A8; --line:#313C40;
+  --accent:#5FA9C9; --accent-ink:#0E1416; --mark:#F0B83A; --mark-soft:#3A3120;
+  --ok:#6DBB78; --warn:#E0A94A; --bad:#EE7B5B;
+  --c-seko:#6BB0CF; --c-hinshitsu:#7FC274; --c-anzen:#EE7B5B; --c-kankyo:#5FC2AF; --c-ict:#B69BDD; --c-chiiki:#D9975A;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.7;padding-inline:16px;padding-block:0 64px}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0;line-height:1.35}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--mark);outline-offset:2px}
+
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px;padding-block:28px 20px;border-bottom:2px solid var(--ink)}
+header.top h1{font-size:30px;font-weight:900;letter-spacing:.02em}
+header.top h1 small{display:block;font-family:var(--font-body);font-weight:400;font-size:13px;color:var(--muted);letter-spacing:.04em;margin-bottom:2px}
+.stamp{font-family:var(--font-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);padding:4px 10px;border-radius:3px;background:var(--surface)}
+
+section.step{margin-top:32px}
+.step-head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+.step-no{font-family:var(--font-mono);font-weight:600;font-size:13px;color:var(--accent-ink);background:var(--accent);padding:2px 8px;border-radius:2px}
+.step-head h2{font-size:20px}
+.step-head p{margin:0;color:var(--muted);font-size:13px}
+
+.drops{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.drop{background:var(--surface);border:1.5px dashed var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,background .15s}
+.drop.over{border-color:var(--accent);background:var(--sunk)}
+.drop h3{font-size:16px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.drop h3 span{font-family:var(--font-body);font-weight:400;font-size:12px;color:var(--muted)}
+.drop label.pick{align-self:flex-start;cursor:pointer;border:1px solid var(--ink);padding:5px 14px;border-radius:3px;font-size:13px;font-weight:700;background:var(--surface)}
+.drop label.pick:hover{background:var(--sunk)}
+.drop input[type=file]{position:absolute;width:1px;height:1px;opacity:0}
+.drop .hint{font-size:12px;color:var(--muted);margin:0}
+.files{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.files li{display:flex;align-items:center;gap:8px;font-size:13px;background:var(--sunk);border-radius:3px;padding:5px 8px}
+.files li .nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.files li .meta{font-family:var(--font-mono);font-size:11px;color:var(--muted);white-space:nowrap}
+.files li .meta.warn{color:var(--warn)}
+.files li button{border:0;background:none;cursor:pointer;color:var(--muted);padding:0 4px;font-size:16px;line-height:1}
+
+.meta-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.field{display:flex;flex-direction:column;gap:4px}
+.field label{font-size:12px;color:var(--muted);font-weight:700;letter-spacing:.04em}
+.field input,.field select,.field textarea{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:7px 10px;width:100%}
+.field textarea{resize:vertical;min-height:40px}
+.field.wide{grid-column:1/-1}
+
+.sheets{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px}
+.sheets-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:10px}
+.sheets-head h3{font-size:15px}
+.sheets-head p{margin:0;font-size:12px;color:var(--muted)}
+.thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;max-height:340px;overflow:auto;padding:2px}
+.thumb{border:2px solid var(--line);border-radius:4px;background:var(--sunk);padding:4px;cursor:pointer;display:flex;flex-direction:column;gap:4px;text-align:left}
+.thumb canvas{width:100%;height:auto;display:block;background:#fff}
+.thumb .cap{font-family:var(--font-mono);font-size:10.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb[aria-pressed="true"]{border-color:var(--mark);background:var(--mark-soft)}
+.thumb[aria-pressed="true"] .cap{color:var(--ink);font-weight:600}
+
+.runbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px 16px;margin-top:20px}
+.btn{border:0;border-radius:4px;padding:10px 22px;font-weight:700;cursor:pointer;background:var(--accent);color:var(--accent-ink);font-size:15px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);padding:8px 16px;font-size:13px}
+.btn.small{padding:6px 14px;font-size:13px}
+.note{font-size:12px;color:var(--muted);margin:0}
+.note.err{color:var(--bad)}
+
+.progress{margin-top:16px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
+.progress ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;font-size:13px}
+.progress li{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center}
+.progress .st{font-family:var(--font-mono);font-size:12px;text-align:center}
+.progress li[data-s="run"] .st{color:var(--accent)}
+.progress li[data-s="ok"] .st{color:var(--ok)}
+.progress li[data-s="ng"] .st{color:var(--bad)}
+.progress li .t{font-family:var(--font-mono);font-size:11px;color:var(--muted)}
+.bar{height:4px;background:var(--sunk);border-radius:2px;margin-bottom:10px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .3s}
+
+.banner{margin-top:14px;background:var(--mark-soft);border:1px solid var(--mark);border-radius:4px;padding:8px 12px;font-size:13px}
+
+.overview{display:grid;grid-template-columns:1.2fr 1fr;gap:14px}
+@media (max-width:760px){.overview{grid-template-columns:1fr}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel h3{font-size:15px;margin-bottom:8px}
+.panel p{margin:0 0 8px}
+.panel ul{margin:0;padding-left:1.2em}
+.panel li{margin-bottom:3px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.kv dt{color:var(--muted);font-size:12px;font-weight:700;padding-top:2px}
+.kv dd{margin:0}
+.gaps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.gaps li{border-left:3px solid var(--warn);padding:2px 0 2px 10px}
+.gaps b{display:block;font-size:14px}
+.gaps span{font-size:13px;color:var(--muted)}
+.ref{font-family:var(--font-mono);font-size:11px;color:var(--muted);background:var(--sunk);padding:1px 6px;border-radius:2px;white-space:nowrap}
+
+.filters{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 12px;font-size:12.5px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--ground);border-color:var(--ink)}
+.chip .n{font-family:var(--font-mono);font-size:11px;opacity:.7;margin-left:4px}
+
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+@media (max-width:420px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.card.adopted{border-color:var(--mark);box-shadow:0 0 0 1px var(--mark)}
+.card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cat{font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:2px;color:#fff;letter-spacing:.04em}
+.kind{font-size:11.5px;color:var(--muted);border:1px solid var(--line);padding:1px 7px;border-radius:2px}
+.rank{margin-left:auto;font-family:var(--font-mono);font-weight:600;font-size:12px;border:1.5px solid currentColor;border-radius:50%;width:24px;height:24px;display:grid;place-items:center}
+.rank.A{color:var(--ok)} .rank.B{color:var(--warn)} .rank.C{color:var(--muted)}
+.card h3{font-size:16.5px}
+.card .why{font-size:13px;color:var(--muted);margin:0}
+.card .body{margin:0;font-size:14px}
+.card dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px}
+.card dt{color:var(--muted);font-weight:700;font-size:12px}
+.card dd{margin:0}
+.card-foot{margin-top:auto;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding-top:10px;border-top:1px solid var(--line)}
+.adopt{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:700;cursor:pointer}
+.adopt input{width:17px;height:17px;accent-color:var(--mark)}
+.cost{font-size:12px;color:var(--muted);margin-left:auto}
+
+.export{position:sticky;bottom:0;margin-top:22px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:12px 14px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.export .count{font-weight:700}
+.export .count b{font-family:var(--font-mono);color:var(--mark);font-size:18px}
+.refine{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.refine input{flex:1;min-width:200px;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:7px 10px}
+footer{margin-top:40px;font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px}
+footer p{margin:0 0 6px;max-width:72ch}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.key{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px}
+.key summary{cursor:pointer;font-weight:700;display:flex;align-items:center;gap:10px;list-style:none}
+.key summary::-webkit-details-marker{display:none}
+.key summary::before{content:"▸";font-family:var(--font-mono);color:var(--muted)}
+.key[open] summary::before{content:"▾"}
+.pill{font-size:11.5px;font-weight:700;padding:1px 9px;border-radius:999px;border:1px solid currentColor}
+.pill.ok{color:var(--ok)} .pill.ng{color:var(--bad)}
+.key-body{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.key-row{display:flex;flex-wrap:wrap;gap:8px}
+.key-row input{flex:1;min-width:220px;background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:7px 10px;font-family:var(--font-mono);font-size:13px}
+.key-body ol{margin:0;padding-left:1.3em;font-size:13px;color:var(--muted)}
+.key-body code{font-family:var(--font-mono);font-size:12px;background:var(--sunk);padding:0 4px;border-radius:2px}
+.eta{margin:0 0 8px;font-weight:700;font-size:15px;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline}
+.eta small{font-weight:400;font-size:12px;color:var(--muted)}
+.cost-line{font-family:var(--font-mono);font-size:12px;color:var(--muted);margin-top:8px}
+.account{margin-top:18px;display:flex;flex-direction:column;gap:12px}
+.acc-card{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.acc-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.acc-row select{background:var(--surface);border:1px solid var(--line);border-radius:3px;padding:6px 8px;max-width:100%}
+.gbtn{display:inline-flex;align-items:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #747775;border-radius:4px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:14px}
+.gbtn:hover{background:#f7f8f8}
+.acc-who{font-weight:700}
+.acc-foot{display:flex;flex-wrap:wrap;gap:8px 20px;align-items:flex-end}
+.acc-foot .note{max-width:60ch}
+.admin p{margin:0;font-size:13.5px}
+.admin h4{margin:8px 0 0;font-family:var(--font-display);font-size:14px}
+.key .key + .key{margin-top:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1><small>工事成績評定「創意工夫・社会性等」提案支援</small>創意工夫ナビ</h1>
+    <span class="stamp" id="stamp">図面 ＋ 特記仕様書 ＋ 施工計画書 → 提案</span>
+  </header>
+
+  <section class="account" aria-label="ログイン">
+    <div class="acc-card" id="acc-google" hidden>
+      <div class="acc-row">
+        <button class="gbtn" type="button" id="g-login"><svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.8.54-1.84.86-3.04.86-2.34 0-4.33-1.58-5.04-3.7H.96v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.96 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58A9 9 0 0 0 .96 4.95l3 2.33C4.67 5.16 6.66 3.58 9 3.58z"/></svg>Googleでログイン</button>
+        <span class="acc-who" id="g-who"></span>
+        <button class="btn ghost" type="button" id="g-logout" hidden>ログアウト</button>
+      </div>
+      <div class="acc-row" id="g-proj-row" hidden>
+        <label for="g-proj" class="note">無料枠を使うプロジェクト</label>
+        <select id="g-proj"></select>
+      </div>
+      <p class="note" id="g-note">自分のGoogleアカウントでログインすると、その人の無料枠で解析します。</p>
+    </div>
+
+    <details class="key" id="key-box">
+      <summary>APIキーで使う <span class="pill ng" id="key-state">未設定</span></summary>
+      <div class="key-body">
+        <div class="key-row">
+          <input id="key-input" type="password" autocomplete="off" spellcheck="false" placeholder="ここにAPIキーを貼り付け" aria-label="Gemini APIキー">
+          <button class="btn small" type="button" id="key-save">保存</button>
+          <button class="btn ghost" type="button" id="key-clear">削除</button>
+        </div>
+        <p class="note" id="key-note">キーはこのPCのこのブラウザにだけ保存されます。送り先はGoogleのGemini APIだけです。</p>
+        <ol>
+          <li>Googleアカウントで <code>aistudio.google.com/apikey</code> を開き、キーを作成してコピーします（無料・カード登録不要）。</li>
+          <li><b>支払い情報（Billing）は登録しないでください。</b>登録しなければ無料枠を超えても課金されず、その日は止まるだけです。</li>
+        </ol>
+      </div>
+    </details>
+
+    <div class="acc-foot">
+      <div class="field" style="max-width:300px"><label for="model">使うモデル</label>
+        <select id="model"><option value="gemini-3.8-flash">gemini-3.8-flash（推奨）</option><option value="gemini-3.5-flash">gemini-3.5-flash</option><option value="gemini-2.5-flash">gemini-2.5-flash</option></select></div>
+      <p class="note">無料枠では、送った資料がGoogleのサービス改善に使われる規約です。公開前の機密資料は入れないでください。</p>
+    </div>
+
+    <details class="key" id="admin-box">
+      <summary>代表者向け：Googleログインを使えるようにする（最初に1回だけ）</summary>
+      <div class="key-body admin">
+        <p>Googleの決まりで、ログイン機能を使うアプリは登録が必要です。代表者が1回だけ次の作業をすると、あとは全員が自分のアカウントでログインでき、<b>それぞれ自分の無料枠</b>を使います。</p>
+        <h4>A. アプリをネット上に置く場所を作る（GitHub Pages・無料）</h4>
+        <ol>
+          <li><code>github.com</code> で無料アカウントを作ります。</li>
+          <li>右上の「＋」→「New repository」。名前は例えば <code>soui-navi</code>、「Public」を選んで作成します。</li>
+          <li>作成したリポジトリの「Settings」→「Pages」で、Branch を <code>main</code> にして保存します（ファイルは手順Cで入れます）。</li>
+          <li>公開URLは <code>https://ユーザー名.github.io/soui-navi/</code> になります。次の手順では <b>「https://ユーザー名.github.io」</b> の部分だけを使います。</li>
+        </ol>
+        <h4>B. Googleにアプリを登録する（Google Cloud・無料）</h4>
+        <ol>
+          <li><code>console.cloud.google.com</code> を開き、上部のプロジェクト選択から「新しいプロジェクト」を作ります（名前例：創意工夫ナビ）。</li>
+          <li>検索欄で「Cloud Resource Manager API」を検索して「有効にする」を押します。同じように「Generative Language API」も有効にします。</li>
+          <li>メニュー「Google Auth Platform」（または「APIとサービス」→「OAuth同意画面」）で「開始」→ アプリ名「創意工夫ナビ」、サポートメールに自分のアドレス、対象は「外部」を選んで作成します。</li>
+          <li>「対象」（テストユーザー）に、<b>使う人全員のGmailアドレス</b>を追加します（100人まで。あとから追加もできます）。</li>
+          <li>「データアクセス」→「スコープを追加」で、次の2つを手入力して保存します。<br><code>https://www.googleapis.com/auth/cloud-platform</code><br><code>https://www.googleapis.com/auth/generative-language.retriever</code></li>
+          <li>「クライアント」→「クライアントを作成」→ 種類「ウェブ アプリケーション」。「承認済みの JavaScript 生成元」に Aの <code>https://ユーザー名.github.io</code> を入れて作成します。</li>
+          <li>表示された「クライアントID」（<code>…apps.googleusercontent.com</code> で終わる文字列）をコピーします。</li>
+        </ol>
+        <h4>C. 設定入りのファイルを作って置く</h4>
+        <div class="key-row">
+          <input id="cid-input" autocomplete="off" spellcheck="false" placeholder="…apps.googleusercontent.com" aria-label="クライアントID">
+          <button class="btn small" type="button" id="cid-save">設定入りファイルを保存</button>
+        </div>
+        <p class="note" id="cid-note">保存される <code>index.html</code> を、Aのリポジトリの「Add file」→「Upload files」でアップロードします。数分後に公開URLで開けます。</p>
+        <h4>D. 使う人に伝えること</h4>
+        <ol>
+          <li>公開URLを開き、「Googleでログイン」を押します。</li>
+          <li>「Googleはこのアプリを確認していません」と出たら「続行」を押します（社内用のため正常です）。</li>
+          <li>権限の確認画面では、すべてにチェックを入れて「続行」を押します。</li>
+          <li>初めての人は、先に一度 <code>aistudio.google.com</code> を開いて利用規約に同意してください（自分の無料枠が作られます）。</li>
+        </ol>
+      </div>
+    </details>
+  </section>
+
+  <section class="step" aria-labelledby="s1">
+    <div class="step-head"><span class="step-no">STEP 1</span><h2 id="s1">資料を読み込む</h2><p>PDFをドラッグするか、ボタンから選択（複数可）</p></div>
+    <div class="drops">
+      <div class="drop" data-type="drawing">
+        <h3>図面 <span>図形・文字の両方を読みます</span></h3>
+        <label class="pick" for="f-drawing">PDFを選択</label>
+        <input type="file" id="f-drawing" accept="application/pdf,.pdf" multiple>
+        <ul class="files" id="list-drawing"></ul>
+        <p class="hint">大きいPDFは自動で分割して読み込みます</p>
+      </div>
+      <div class="drop" data-type="spec">
+        <h3>特記仕様書 <span>義務事項の判定に使用</span></h3>
+        <label class="pick" for="f-spec">PDFを選択</label>
+        <input type="file" id="f-spec" accept="application/pdf,.pdf" multiple>
+        <ul class="files" id="list-spec"></ul>
+        <p class="hint">仕様で義務付けられた事項は創意工夫から除外します</p>
+      </div>
+      <div class="drop" data-type="plan">
+        <h3>施工計画書 <span>計画済み内容との差分</span></h3>
+        <label class="pick" for="f-plan">PDFを選択</label>
+        <input type="file" id="f-plan" accept="application/pdf,.pdf" multiple>
+        <ul class="files" id="list-plan"></ul>
+        <p class="hint">計画書にない・薄い部分を洗い出します</p>
+      </div>
+    </div>
+
+    <div class="meta-form">
+      <div class="field"><label for="m-name">工事名</label><input id="m-name" placeholder="例：国道○号 ○○地区道路改良工事"></div>
+      <div class="field"><label for="m-owner">発注者</label>
+        <select id="m-owner"><option>国土交通省（直轄）</option><option>都道府県</option><option>市区町村</option><option>その他（NEXCO・機構など）</option></select></div>
+      <div class="field"><label for="m-period">工期・施工時期</label><input id="m-period" placeholder="例：2026年10月〜2027年3月"></div>
+      <div class="field wide"><label for="m-focus">重点にしたいこと（任意）</label><textarea id="m-focus" rows="2" placeholder="例：通学路に面しているので第三者対策を厚く。ICT施工は協力会社の都合で難しい。"></textarea></div>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s2">
+    <div class="step-head"><span class="step-no">STEP 2</span><h2 id="s2">解析する</h2><p>100ページ程度で5〜15分かかります（無料枠の制限で待つことがあります）</p></div>
+    <div class="runbar">
+      <button class="btn" id="run" disabled>解析して提案を作成</button>
+      <button class="btn ghost" id="stop" hidden>中止</button>
+      <p class="note" id="run-note">資料を1つ以上読み込むと実行できます</p>
+    </div>
+    <div class="progress" id="progress" hidden>
+      <p class="eta" id="eta" aria-live="polite"></p>
+      <div class="bar"><i id="bar"></i></div>
+      <ol id="tasks"></ol>
+      <p class="cost-line" id="cost"></p>
+    </div>
+  </section>
+
+  <section class="step" aria-labelledby="s3" id="result-sec">
+    <div class="step-head"><span class="step-no">STEP 3</span><h2 id="s3">提案を選んで出力</h2><p>採用する提案にチェック → Excel（実施状況の下書き）に出力</p></div>
+    <div class="banner" id="sample-banner">いま表示しているのは<b>サンプル</b>（架空の道路改良工事）です。資料を読み込んで解析すると置き換わります。</div>
+    <div id="result"></div>
+  </section>
+
+  <footer>
+    <p>解析はGoogle Gemini APIの無料枠で行います。支払い情報を登録していないキーなら料金は発生しません。無料枠には1分・1日あたりの回数制限があり、制限にかかると自動で待ってから続けます。</p>
+    <p>AIの提案は下書きです。採否・内容の確認は必ず担当者が行い、発注者の様式・運用表（考査項目別運用表）に合わせてください。</p>
+  </footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+<script type="module">
+// 配布用ファイルを作るため、読み込み直後のページをそのまま控えておく
+const PRISTINE = "<!doctype html>\n" + document.documentElement.outerHTML;
+const PART_PAGES = 50;                   // 1回に読ませる最大ページ数
+const PART_BYTES = 14 * 1024 * 1024;     // 1回に送る最大PDFサイズ（base64で約19MB、リクエスト上限20MB内）
+const FACT_BUDGET = 60000;               // 提案作成に渡す事実の最大文字数
+
+const TYPES = { drawing: "図面", spec: "特記仕様書", plan: "施工計画書" };
+const CATS = [
+  { key: "施工", var: "--c-seko", kind: "創意工夫" },
+  { key: "品質", var: "--c-hinshitsu", kind: "創意工夫" },
+  { key: "安全衛生", var: "--c-anzen", kind: "創意工夫" },
+  { key: "環境", var: "--c-kankyo", kind: "創意工夫" },
+  { key: "ICT・新技術", var: "--c-ict", kind: "創意工夫" },
+  { key: "地域貢献", var: "--c-chiiki", kind: "社会性等" },
+];
+const KINDS = ["概要", "工種数量", "現場条件", "制約", "品質", "安全", "環境", "義務事項", "計画内容", "その他"];
+const $ = (id) => document.getElementById(id);
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  if (attrs) for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) if (c != null && c !== false) el.append(c instanceof Node ? c : String(c));
+  return el;
+}
+const store = {
+  get(k) { try { return JSON.parse(localStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+/* ---------- ログイン（Googleアカウント / APIキー） ---------- */
+const GOOGLE_CLIENT_ID = "267316152629-dhld26rpnfvd72vhihagklrbd9q23495.apps.googleusercontent.com";   // 代表者が「設定入りファイルを保存」で埋め込む
+const SCOPES = ["openid", "email", "https://www.googleapis.com/auth/cloud-platform", "https://www.googleapis.com/auth/generative-language.retriever"];
+const ses = {
+  get(k) { try { return JSON.parse(sessionStorage.getItem(k)); } catch { return null; } },
+  set(k, v) { try { sessionStorage.setItem(k, JSON.stringify(v)); } catch {} },
+  del(k) { try { sessionStorage.removeItem(k); } catch {} },
+};
+const canGoogle = !!GOOGLE_CLIENT_ID && /^https?:$/.test(location.protocol);
+let apiKey = store.get("soui:gemini-key") || "";
+let model = store.get("soui:model") || "gemini-3.8-flash";
+let gauth = ses.get("soui:gauth");                 // {token, exp, email, project}
+if (gauth && gauth.exp < Date.now() + 60000) gauth = null;
+
+const authReady = () => (canGoogle && !!gauth?.project) || !!apiKey;
+const authHeaders = () => canGoogle && gauth?.project
+  ? { Authorization: "Bearer " + gauth.token, "x-goog-user-project": gauth.project }
+  : { "x-goog-api-key": apiKey };
+
+function renderAuth() {
+  $("acc-google").hidden = !canGoogle;
+  const st = $("key-state");
+  st.textContent = apiKey ? "設定済み" : "未設定";
+  st.className = "pill " + (apiKey ? "ok" : "ng");
+  $("key-input").value = "";
+  $("key-input").placeholder = apiKey ? "設定済み（" + apiKey.slice(0, 6) + "…" + apiKey.slice(-4) + "）" : "ここにAPIキーを貼り付け";
+  if (canGoogle) {
+    $("g-login").hidden = !!gauth;
+    $("g-logout").hidden = !gauth;
+    $("g-who").textContent = gauth ? `${gauth.email || "Googleアカウント"} でログイン中` : "";
+    $("g-proj-row").hidden = !gauth || !gauth.projects || gauth.projects.length < 2;
+    if (gauth?.projects) {
+      $("g-proj").replaceChildren(...gauth.projects.map((p) => h("option", { value: p.id }, p.name === p.id ? p.id : `${p.name}（${p.id}）`)));
+      $("g-proj").value = gauth.project || "";
+    }
+    $("admin-box").hidden = true;
+  } else if (!apiKey) $("key-box").open = true;
+  if (!GOOGLE_CLIENT_ID) $("admin-box").hidden = false;
+  else if (!canGoogle) $("admin-box").hidden = true;
+  updateRun();
+}
+const gNote = (t, err) => { const n = $("g-note"); n.textContent = t; n.classList.toggle("err", !!err); };
+
+async function waitForGoogle() {
+  for (let i = 0; i < 100 && !window.google?.accounts?.oauth2; i++) await new Promise((r) => setTimeout(r, 100));
+  return window.google?.accounts?.oauth2 || null;
+}
+
+// ログイン後、その人の「AI Studioの無料枠プロジェクト」を探す
+async function findProjects(token) {
+  const r = await fetch("https://cloudresourcemanager.googleapis.com/v1/projects?filter=lifecycleState%3AACTIVE&pageSize=200", { headers: { Authorization: "Bearer " + token } });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j?.error?.message || r.statusText);
+  const all = (j.projects || []).map((p) => ({ id: p.projectId, name: p.name || p.projectId }));
+  const studio = all.filter((p) => /^gen-lang-client-/.test(p.id));
+  return studio.length ? [...studio, ...all.filter((p) => !studio.includes(p))] : all;
+}
+
+function login(silent) {
+  return new Promise(async (done) => {
+    const oauth2 = await waitForGoogle();
+    if (!oauth2) { gNote("Googleのログイン部品を読み込めませんでした。ネット接続を確認してください。", true); return done(false); }
+    const client = oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: SCOPES.join(" "),
+      callback: async (r) => {
+        if (r.error) { gNote(r.error === "access_denied" ? "ログインが許可されませんでした。代表者に、あなたのGmailをテストユーザーに追加してもらってください。" : "ログインできませんでした（" + r.error + "）", true); return done(false); }
+        if (!oauth2.hasGrantedAllScopes(r, SCOPES[2], SCOPES[3])) { gNote("権限の確認画面で、すべての項目にチェックを入れてログインし直してください。", true); return done(false); }
+        const prev = gauth;
+        gauth = { token: r.access_token, exp: Date.now() + (Number(r.expires_in) || 3600) * 1000, email: prev?.email || "", project: prev?.project || "", projects: prev?.projects };
+        try {
+          const u = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", { headers: { Authorization: "Bearer " + gauth.token } }).then((x) => x.json());
+          gauth.email = u.email || gauth.email;
+        } catch {}
+        if (!gauth.project) {
+          try {
+            gauth.projects = await findProjects(gauth.token);
+            const saved = store.get("soui:project:" + gauth.email);
+            gauth.project = gauth.projects.find((p) => p.id === saved)?.id || gauth.projects[0]?.id || "";
+          } catch (e) { gNote("プロジェクトを確認できませんでした：" + e.message, true); }
+        }
+        ses.set("soui:gauth", gauth);
+        if (!gauth.project) gNote("無料枠がまだ作られていません。aistudio.google.com を一度開いて利用規約に同意してから、ログインし直してください。", true);
+        else gNote("ログインしました。この人の無料枠で解析します。");
+        renderAuth(); done(!!gauth.project);
+      },
+      error_callback: (e) => {
+        gNote(e?.type === "popup_failed_to_open" ? "ログイン画面が開けませんでした。ブラウザのポップアップブロックを解除してください。" : e?.type === "popup_closed" ? "ログインを中止しました。" : "ログインできませんでした。", true);
+        done(false);
+      },
+    });
+    client.requestAccessToken({ prompt: silent ? "" : "select_account", login_hint: gauth?.email || undefined });
+  });
+}
+
+$("g-login").addEventListener("click", () => login(false));
+$("g-logout").addEventListener("click", () => {
+  try { window.google?.accounts?.oauth2?.revoke(gauth?.token, () => {}); } catch {}
+  gauth = null; ses.del("soui:gauth"); gNote("ログアウトしました。"); renderAuth();
+});
+$("g-proj").addEventListener("change", () => {
+  gauth.project = $("g-proj").value; ses.set("soui:gauth", gauth);
+  store.set("soui:project:" + gauth.email, gauth.project);
+});
+// 解析の前に、ログインの残り時間が短ければ更新しておく（ボタン操作の中で呼ぶ）
+async function ensureAuth() {
+  if (canGoogle && gauth?.project) {
+    if (gauth.exp - Date.now() < 25 * 60 * 1000) return await login(true);
+    return true;
+  }
+  return !!apiKey;
+}
+
+$("key-save").addEventListener("click", () => {
+  const v = $("key-input").value.trim();
+  if (!/^[\x21-\x7e]{20,}$/.test(v)) { $("key-note").textContent = "キーの形式が正しくないようです。AI Studioの「コピー」ボタンでコピーし直してください（前後の空白や改行が入らないように）。"; return; }
+  apiKey = v; store.set("soui:gemini-key", v);
+  $("key-note").textContent = "保存しました。このPCのこのブラウザにだけ保存されています。";
+  $("key-box").open = false; renderAuth();
+});
+$("key-clear").addEventListener("click", () => {
+  apiKey = ""; store.del("soui:gemini-key");
+  $("key-note").textContent = "キーを削除しました。"; renderAuth();
+});
+
+// 代表者：クライアントIDを埋め込んだ配布用ファイルを作る
+$("cid-save").addEventListener("click", () => {
+  const cid = $("cid-input").value.trim();
+  if (!/^[\w-]+\.apps\.googleusercontent\.com$/.test(cid)) { $("cid-note").textContent = "「…apps.googleusercontent.com」で終わるクライアントIDを貼り付けてください。"; return; }
+  const marker = 'const GOOGLE_CLIENT_ID = "";';
+  const src = PRISTINE.replace(/const GOOGLE_CLIENT_ID = "[^"]*";/, marker.replace('""', JSON.stringify(cid)));
+  const a = h("a", { href: URL.createObjectURL(new Blob([src], { type: "text/html" })), download: "index.html" });
+  document.body.append(a); a.click(); a.remove();
+  $("cid-note").textContent = "index.html を保存しました。GitHubのリポジトリにアップロードしてください。";
+});
+
+/* ---------- PDF読み込み・分割 ---------- */
+const state = { docs: { drawing: [], spec: [], plan: [] }, result: null, isSample: true, adopted: new Set(), filter: "すべて" };
+let seq = 0;
+
+async function addFiles(type, files) {
+  for (const f of files) {
+    if (!/\.pdf$/i.test(f.name) && f.type !== "application/pdf") continue;
+    const doc = { id: ++seq, name: f.name, size: f.size, parts: [], pages: 0, status: "読込中…" };
+    state.docs[type].push(doc);
+    renderFiles(type); updateRun();
+    try {
+      doc.parts = await splitPdf(new Uint8Array(await f.arrayBuffer()));
+      doc.pages = doc.parts.length ? doc.parts[doc.parts.length - 1].to : 0;
+      doc.status = null;
+    } catch (e) {
+      doc.status = /encrypt/i.test(String(e?.message)) ? "保護されたPDFです" : "読み込めません";
+      doc.error = true;
+    }
+    renderFiles(type); updateRun();
+  }
+}
+
+async function splitPdf(bytes) {
+  const src = await PDFLib.PDFDocument.load(bytes, { updateMetadata: false });
+  const n = src.getPageCount();
+  if (n <= PART_PAGES && bytes.length <= PART_BYTES) return [{ from: 1, to: n, blob: new Blob([bytes], { type: "application/pdf" }) }];
+  const parts = [];
+  const per = Math.max(1, Math.min(PART_PAGES, Math.floor(n * PART_BYTES / bytes.length)));
+  const make = async (from, to) => {           // from/to は1始まり
+    const out = await PDFLib.PDFDocument.create();
+    const idx = Array.from({ length: to - from + 1 }, (_, i) => from - 1 + i);
+    (await out.copyPages(src, idx)).forEach((p) => out.addPage(p));
+    const b = await out.save();
+    if (b.length > PART_BYTES && to > from) {
+      const mid = Math.floor((from + to) / 2);
+      await make(from, mid); await make(mid + 1, to);
+    } else {
+      if (b.length > PART_BYTES) throw new Error("1ページで22MBを超えるページがあります");
+      parts.push({ from, to, blob: new Blob([b], { type: "application/pdf" }) });
+    }
+  };
+  for (let s = 1; s <= n; s += per) await make(s, Math.min(n, s + per - 1));
+  return parts;
+}
+
+function renderFiles(type) {
+  $("list-" + type).replaceChildren(...state.docs[type].map((d) => h("li", null,
+    h("span", { class: "nm", title: d.name }, d.name),
+    h("span", { class: "meta" + (d.error ? " warn" : "") }, d.status || `${d.pages}p · ${(d.size / 1048576).toFixed(1)}MB${d.parts.length > 1 ? ` · ${d.parts.length}分割` : ""}`),
+    h("button", { "aria-label": d.name + " を外す", onclick: () => { state.docs[type] = state.docs[type].filter((x) => x.id !== d.id); renderFiles(type); updateRun(); } }, "×"))));
+}
+
+const toBase64 = (blob) => new Promise((ok, ng) => {
+  const r = new FileReader();
+  r.onload = () => ok(String(r.result).split(",")[1]);
+  r.onerror = () => ng(r.error);
+  r.readAsDataURL(blob);
+});
+
+/* ---------- Gemini API ---------- */
+let ctl = null;
+let usage = { in: 0, out: 0 };
+
+function updateRun() {
+  const any = Object.values(state.docs).some((a) => a.some((d) => d.parts.length));
+  const loading = Object.values(state.docs).some((a) => a.some((d) => d.status && !d.error));
+  $("run").disabled = !authReady() || !any || loading || !!ctl;
+  const n = $("run-note");
+  n.classList.remove("err");
+  if (ctl) n.textContent = "解析中です。このページを閉じずにお待ちください";
+  else if (!authReady()) n.textContent = canGoogle ? "先に「Googleでログイン」を押してください" : "先にAPIキーを設定してください";
+  else if (loading) n.textContent = "PDFを読み込んでいます…";
+  else if (!any) n.textContent = "資料を1つ以上読み込むと実行できます";
+  else {
+    const missing = Object.keys(TYPES).filter((t) => !state.docs[t].some((d) => d.parts.length)).map((t) => TYPES[t]);
+    n.textContent = missing.length ? `${missing.join("・")}がありません。そのまま実行もできます` : "3種類そろっています";
+  }
+}
+
+function showCost() {
+  $("cost").textContent = `使用量 入力${usage.in.toLocaleString()} / 出力${usage.out.toLocaleString()} トークン（無料枠の範囲内なら料金はかかりません）`;
+}
+
+class ApiError extends Error {
+  constructor(code, message, status) { super(message); this.code = code; this.status = status; }
+}
+const sleep = (ms, signal) => new Promise((ok, ng) => {
+  const t = setTimeout(ok, ms);
+  signal?.addEventListener("abort", () => { clearTimeout(t); ng(new ApiError("aborted", "中止")); }, { once: true });
+});
+
+// Gemini generateContent を呼び、JSONを返す。無料枠の回数制限(429)は待って再試行する
+async function ask({ parts, schema, maxTokens, signal, onWait }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`;
+  const body = JSON.stringify({
+    contents: [{ role: "user", parts }],
+    generationConfig: { responseMimeType: "application/json", responseSchema: schema, maxOutputTokens: maxTokens, temperature: 0.4 },
+  });
+  for (let attempt = 0; ; attempt++) {
+    if (signal?.aborted) throw new ApiError("aborted", "中止");
+    let res;
+    try {
+      res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", ...authHeaders() }, body, signal });
+    } catch (e) {
+      if (e?.name === "AbortError") throw new ApiError("aborted", "中止");
+      if (attempt < 2) { await sleep(5000, signal); continue; }
+      throw new ApiError("network", String(e?.message || e));
+    }
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = json?.error?.message || res.statusText;
+      const st = json?.error?.status || "";
+      if ((res.status === 429 || res.status === 503 || res.status === 500) && attempt < 6) {
+        const hint = (json?.error?.details || []).find((d) => d.retryDelay)?.retryDelay;
+        const wait = hint ? Math.ceil(parseFloat(hint)) * 1000 + 1000 : Math.min(60000, 8000 * 2 ** attempt);
+        if (/per ?day|PerDay/i.test(msg)) throw new ApiError("daily", msg, res.status);
+        onWait?.(Math.round(wait / 1000));
+        await sleep(wait, signal);
+        continue;
+      }
+      if (res.status === 401) throw new ApiError("login", msg, res.status);
+      if (res.status === 403 && st === "PERMISSION_DENIED" && canGoogle && gauth) throw new ApiError("perm", msg, res.status);
+      if (res.status === 400 && /API key/i.test(msg) || res.status === 401 || res.status === 403 && /key/i.test(msg)) throw new ApiError("key", msg, res.status);
+      if (res.status === 404) throw new ApiError("model", msg, res.status);
+      if (res.status === 413 || /too large|exceeds/i.test(msg)) throw new ApiError("large", msg, res.status);
+      if (res.status === 429) throw new ApiError("rate", msg, res.status);
+      throw new ApiError("api", `${st} ${msg}`.trim(), res.status);
+    }
+    const u = json.usageMetadata || {};
+    usage.in += u.promptTokenCount || 0;
+    usage.out += (u.candidatesTokenCount || 0) + (u.thoughtsTokenCount || 0);
+    showCost();
+    const cand = json.candidates?.[0];
+    if (!cand) throw new ApiError("blocked", json.promptFeedback?.blockReason || "応答なし");
+    if (cand.finishReason === "MAX_TOKENS") throw new ApiError("too_long", "出力が上限に達しました");
+    if (cand.finishReason && !["STOP", "FINISH_REASON_UNSPECIFIED"].includes(cand.finishReason)) throw new ApiError("blocked", cand.finishReason);
+    const text = (cand.content?.parts || []).filter((p) => p.text && !p.thought).map((p) => p.text).join("");
+    try { return JSON.parse(text); }
+    catch {
+      const m = text.match(/[\[{][\s\S]*[\]}]/);
+      try { if (m) return JSON.parse(m[0]); } catch {}
+      throw new ApiError("bad_json", "応答の形式が崩れました");
+    }
+  }
+}
+
+function errText(e) {
+  switch (e?.code) {
+    case "aborted": return "中止しました。";
+    case "login": return "ログインの有効期限が切れました。「ログアウト」→「Googleでログイン」でログインし直してください。";
+    case "perm": return "このアカウント・プロジェクトではGemini APIを使えません。aistudio.google.com を一度開いて利用規約に同意したか確認してください。（詳細：" + String(e.message).slice(0, 120) + "）";
+    case "key": return "APIキーが正しくありません。Google AI Studioでキーを確認し、設定し直してください。";
+    case "model": return `モデル「${model}」が使えません。APIキー設定欄でモデルを変えてください。`;
+    case "daily": return "今日の無料枠の上限に達しました。明日（日本時間の夕方にリセット）に再実行してください。";
+    case "rate": return "無料枠の回数制限にかかりました。数分待ってから再実行してください。";
+    case "large": return "PDFが大きすぎます。ファイルを分けて読み込んでください。";
+    case "network": return "Gemini APIに接続できません。ネットワーク（社内のプロキシ等）を確認してください。";
+    case "too_long": return "回答が長くなりすぎて途中で切れました。もう一度実行してください。";
+    case "blocked": return "AIがこの内容への回答を止めました（" + e.message + "）。";
+    case "bad_json": return "応答の形式が崩れました。もう一度実行してください。";
+    case "no_facts": return "資料から情報を読み取れませんでした。PDFの中身を確認してください。";
+    case "api": return "APIエラー：" + String(e.message).slice(0, 200);
+    default: return "エラーが発生しました：" + String(e?.message || e).slice(0, 200);
+  }
+}
+const isFatal = (e) => ["aborted", "login", "perm", "key", "model", "daily", "network", "rate"].includes(e?.code);
+
+// Gemini の responseSchema（OpenAPIの部分集合）
+const T = (type, extra) => ({ type, ...extra });
+const S = (d) => T("STRING", { description: d });
+const SA = (d) => T("ARRAY", { items: T("STRING"), description: d });
+const OBJ = (props) => T("OBJECT", { properties: props, required: Object.keys(props), propertyOrdering: Object.keys(props) });
+const FACT_SCHEMA = OBJ({
+  facts: T("ARRAY", { items: OBJ({
+    kind: T("STRING", { enum: KINDS }),
+    text: S("40〜60字程度の事実"),
+    page: T("INTEGER", { description: "このPDF内のページ番号（1始まり）" }),
+    importance: T("INTEGER", { description: "3が最重要、1が参考" }),
+  }) }),
+});
+const SYNTH_SCHEMA = OBJ({
+  overview: OBJ({
+    summary: S("工事概要を2〜3文で"), works: SA("主な工種と数量"),
+    conditions: SA("提案の前提となる現場条件（最大8件）"), obligations: SA("特記で義務付けられている主な事項（最大6件）"),
+  }),
+  gaps: T("ARRAY", { items: OBJ({ title: S("短い見出し"), detail: S("内容"), ref: S("根拠の資料名とページ") }) }),
+  proposals: T("ARRAY", { items: OBJ({
+    category: T("STRING", { enum: CATS.map((c) => c.key) }),
+    title: S("20字程度の提案名"), context: S("対応する現場条件（1文）"),
+    content: S("実施状況に転記できる、である調の具体的内容（120〜200字）"),
+    effect: S("期待される効果（数値目安があれば）"), ref: S("根拠の資料名とページ"),
+    evidence: S("評価のために残す写真・記録"),
+    cost: T("STRING", { enum: ["小", "中", "大"] }), rank: T("STRING", { enum: ["A", "B", "C"] }),
+  }) }),
+});
+
+function extractPrompt(type, doc, part) {
+  const focus = {
+    drawing: "図面からは特に、施工場所の周辺状況（道路・交通、住宅・学校・店舗、河川・水路、既設構造物、地下埋設物、架空線、高低差、狭隘、搬入路、仮設ヤード）、構造物の形状・規模、主要工種と数量、施工上の難所を拾ってください。図形からしか読み取れない情報も重視してください。",
+    spec: "特記仕様書からは特に、受注者に義務付けられている事項（kind=義務事項）、施工時間・工期・季節の制約、品質・出来形・安全・環境に関する指定を拾ってください。",
+    plan: "施工計画書からは特に、計画されている施工方法・仮設・安全対策・品質管理・環境対策・地域対応の内容（kind=計画内容）を拾ってください。",
+  }[type];
+  const range = doc.parts.length > 1 ? `（全${doc.pages}ページのうち p.${part.from}〜${part.to}）` : "";
+  return `あなたは公共土木工事の経験豊富な施工管理技士です。添付のPDFは「${TYPES[type]}」の「${doc.name}」${range}です。
+工事成績評定の「創意工夫」「社会性等」の提案を考えるために必要な事実だけを抜き出してください。
+${focus}
+資料に書かれていないことは推測しないでください。最大25件、importanceは3が最重要。pageは添付PDF内のページ番号（1始まり）です。`;
+}
+
+function synthPrompt(facts, refine) {
+  const has = Object.keys(TYPES).map((t) => TYPES[t] + (state.docs[t].some((d) => d.parts.length) ? "あり" : "なし")).join("、");
+  const focus = $("m-focus").value.trim();
+  return `あなたは公共土木工事で工事成績評定の高得点を多数経験してきた現場代理人です。
+以下の「資料から抽出した事実」をもとに、この現場に固有の「創意工夫」「社会性等」の提案を作成してください。
+
+## 工事情報
+工事名: ${$("m-name").value.trim() || "（未入力）"}
+発注者: ${$("m-owner").value}
+工期・施工時期: ${$("m-period").value.trim() || "（未入力）"}
+読み込んだ資料: ${has}
+${focus ? "担当者の要望: " + focus + "\n" : ""}${refine ? "今回の追加指示: " + refine + "\n" : ""}
+## ルール
+- 特記仕様書・共通仕様書で受注者に義務付けられている事項（義務事項）は、そのままでは創意工夫として評価されない。提案するのはそれを上回る工夫のみとし、義務との差分をcontentに明記する。
+- 施工計画書にすでにある内容（計画内容）と重複する提案はしない。計画を具体化・高度化する提案なら可。
+- 一般論は避け、必ず根拠となる事実に結び付け、refに資料名とページを書く。
+- categoryは「施工」「品質」「安全衛生」「環境」「ICT・新技術」（以上は創意工夫）、「地域貢献」（社会性等）。偏りなく合計12件前後。
+- rankは、この現場での効果と実現性から A（強く推奨）/B/C。
+- gapsには、施工計画書で不足・未記載と思われる事項（施工計画書がない場合は、計画時に特に注意すべき事項）を最大6件。
+
+## 資料から抽出した事実
+${facts}`;
+}
+
+async function pool(items, n, fn) {
+  let i = 0;
+  const run = async () => { while (i < items.length) { const k = i++; await fn(items[k], k); } };
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, run));
+}
+
+let lastFacts = null;
+async function analyze(refine) {
+  if (ctl) return;
+  if (!(await ensureAuth())) { updateRun(); return; }
+  ctl = new AbortController();
+  const signal = ctl.signal;
+  usage = { in: 0, out: 0 }; showCost();
+  $("stop").hidden = false; updateRun();
+  $("progress").hidden = false;
+  const tasks = [];
+  const addTask = (label, pages = 0) => { const t = { label, s: "wait", pages }; tasks.push(t); return t; };
+  const t0 = Date.now();
+  // 残り時間の目安：読み取りは「1ページあたりの秒数」を実績から学習し、提案作成は固定の見込み
+  const estimate = () => {
+    const now = Date.now();
+    const doneRead = tasks.filter((t) => t.pages && t.s === "ok");
+    const donePages = doneRead.reduce((a, t) => a + t.pages, 0);
+    const spp = donePages ? doneRead.reduce((a, t) => a + (t.t1 - t.t0), 0) / 1000 / donePages : 1.2;
+    const SYNTH = 100;
+    let sec = 0;
+    for (const t of tasks) {
+      const own = t.pages ? t.pages * spp : SYNTH;
+      const waitLeft = t.waitEnd ? Math.max(0, (t.waitEnd - now) / 1000) : 0;
+      if (t.s === "wait") sec += own;
+      else if (t.s === "run") sec += Math.max(waitLeft, own - (now - t.t0) / 1000, 5);
+    }
+    return sec;
+  };
+  const fmt = (sec) => { sec = Math.round(sec); const m = Math.floor(sec / 60), s = sec % 60; return m ? `${m}分${s ? s + "秒" : ""}` : `${s}秒`; };
+  const draw = () => {
+    const done = tasks.filter((t) => t.s === "ok" || t.s === "ng").length;
+    $("bar").style.width = (tasks.length ? (done / tasks.length) * 100 : 0) + "%";
+    const active = tasks.some((t) => t.s === "run" || t.s === "wait");
+    const elapsed = fmt((Date.now() - t0) / 1000);
+    if (!active) $("eta").replaceChildren(tasks.some((t) => t.msg === "未実行" || t.msg === "中断") ? `中断しました（経過 ${elapsed}）` : `完了（所要 ${elapsed}）`);
+    else {
+      const left = estimate();
+      const lastRunning = tasks.every((t) => t.pages === 0 || t.s === "ok" || t.s === "ng");
+      $("eta").replaceChildren(
+        left <= 10 && lastRunning ? "まもなく完了します" : `残り 約${fmt(Math.ceil(left / 10) * 10)}`,
+        h("small", null, `経過 ${elapsed} · 目安です。無料枠の制限で待つと延びます`));
+    }
+    $("tasks").replaceChildren(...tasks.map((t) => h("li", { "data-s": t.s },
+      h("span", { class: "st" }, { wait: "·", run: "▶", ok: "✓", ng: "!" }[t.s]),
+      h("span", null, t.label),
+      h("span", { class: "t" }, t.s === "run" ? `処理中 ${Math.round((Date.now() - t.t0) / 1000)}秒` : t.s === "ok" ? `${Math.round((t.t1 - t.t0) / 1000)}秒` : t.s === "ng" ? t.msg || "失敗" : ""))));
+  };
+  const timer = setInterval(draw, 1000);
+  const waitNote = (t, sec) => { t.waitEnd = Date.now() + sec * 1000; t.label = t.label.replace(/（無料枠の制限で\d+秒待機中）$/, "") + `（無料枠の制限で${sec}秒待機中）`; draw(); };
+  const start = (t) => { t.s = "run"; t.t0 = Date.now(); draw(); };
+  const finish = (t, ok, msg) => { t.label = t.label.replace(/（無料枠の制限で\d+秒待機中）$/, ""); t.s = ok ? "ok" : "ng"; t.msg = msg; t.t1 = Date.now(); draw(); };
+
+  try {
+    let facts = refine && lastFacts;
+    let synthTask;
+    if (!facts) {
+      const jobs = [];
+      for (const type of Object.keys(TYPES)) for (const doc of state.docs[type]) for (const part of doc.parts) {
+        const range = doc.parts.length > 1 ? ` p.${part.from}–${part.to}` : "";
+        jobs.push({ type, doc, part, task: addTask(`${TYPES[type]}「${doc.name}」${range} の読み取り`, part.to - part.from + 1) });
+      }
+      synthTask = addTask("現場条件の整理と創意工夫の提案（最も時間がかかります）");
+      draw();
+
+      const collected = [];
+      let fatal = null;
+      await pool(jobs, 1, async (j) => {
+        if (fatal || signal.aborted) return;
+        start(j.task);
+        try {
+          const data = await toBase64(j.part.blob);
+          const r = await ask({
+            signal, maxTokens: 16000, schema: FACT_SCHEMA, onWait: (sec) => waitNote(j.task, sec),
+            parts: [
+              { inline_data: { mime_type: "application/pdf", data } },
+              { text: extractPrompt(j.type, j.doc, j.part) },
+            ],
+          });
+          for (const f of r.facts || []) {
+            const page = j.part.from - 1 + (Number(f.page) || 1);
+            collected.push({ src: TYPES[j.type], kind: f.kind, text: String(f.text), ref: `${TYPES[j.type]}「${j.doc.name}」p.${page}`, imp: Number(f.importance) || 1 });
+          }
+          finish(j.task, true);
+        } catch (e) {
+          finish(j.task, false, isFatal(e) ? "中断" : "読み取れず");
+          if (isFatal(e)) fatal = e;
+          else j.task.label += "（" + errText(e) + "）";
+        }
+      });
+      if (fatal) throw fatal;
+      if (!collected.length) throw { code: "no_facts" };
+
+      const boost = (f) => f.imp + (f.kind === "義務事項" || f.kind === "計画内容" ? 0.5 : 0);
+      collected.sort((a, b) => boost(b) - boost(a));
+      const seen = new Set();
+      let text = "";
+      for (const f of collected) {
+        const key = f.text.replace(/\s/g, "");
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const line = `- [${f.src}/${f.kind}] ${f.text}（${f.ref}）\n`;
+        if (text.length + line.length > FACT_BUDGET) continue;
+        text += line;
+      }
+      facts = lastFacts = text;
+    } else {
+      synthTask = addTask(`条件を変えて再提案：${refine}`);
+    }
+    start(synthTask);
+    const r = await ask({ signal, maxTokens: 32000, schema: SYNTH_SCHEMA, onWait: (sec) => waitNote(synthTask, sec), parts: [{ text: synthPrompt(facts, refine) }] });
+    finish(synthTask, true);
+    state.result = normalize(r);
+    state.isSample = false;
+    state.adopted = new Set(state.result.proposals.filter((p) => p.rank === "A").map((p) => p.id));
+    state.filter = "すべて";
+    store.set("soui:last", { result: state.result, adopted: [...state.adopted], name: $("m-name").value, at: new Date().toISOString() });
+    renderResult();
+    ctl = null; updateRun();
+    $("run-note").textContent = "解析が完了しました。下の提案を確認してください";
+    $("result-sec").scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+  } catch (e) {
+    tasks.filter((t) => t.s === "run" || t.s === "wait").forEach((t) => { t.s = "ng"; t.msg = "未実行"; });
+    ctl = null; updateRun();
+    const n = $("run-note");
+    n.textContent = errText(e);
+    n.classList.add("err");
+  } finally {
+    ctl = null;
+    clearInterval(timer); draw();
+    $("stop").hidden = true;
+  }
+}
+
+function normalize(r) {
+  const proposals = (r.proposals || []).filter((p) => p && p.title).map((p, i) => ({
+    id: "p" + i, category: p.category, title: String(p.title), context: String(p.context || ""), content: String(p.content || ""),
+    effect: String(p.effect || ""), ref: String(p.ref || ""), evidence: String(p.evidence || ""), cost: p.cost, rank: p.rank,
+  }));
+  const ov = r.overview || {};
+  return {
+    overview: { summary: String(ov.summary || ""), works: [].concat(ov.works || []), conditions: [].concat(ov.conditions || []), obligations: [].concat(ov.obligations || []) },
+    gaps: [].concat(r.gaps || []), proposals,
+  };
+}
+
+/* ---------- 結果表示 ---------- */
+const catOf = (k) => CATS.find((c) => c.key === k) || CATS[0];
+function renderResult() {
+  const R = state.result;
+  $("sample-banner").hidden = !state.isSample;
+  const ov = R.overview;
+  const list = (arr) => arr.length ? h("ul", null, arr.map((x) => h("li", null, x))) : h("p", { class: "note" }, "—");
+  const counts = { "すべて": R.proposals.length };
+  for (const p of R.proposals) counts[p.category] = (counts[p.category] || 0) + 1;
+  const filters = h("div", { class: "filters", role: "group", "aria-label": "区分で絞り込み" },
+    ["すべて", ...CATS.map((c) => c.key)].filter((k) => counts[k]).map((k) =>
+      h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === k), onclick: () => { state.filter = k; renderResult(); } },
+        k, h("span", { class: "n" }, counts[k]))));
+  const shown = R.proposals.filter((p) => state.filter === "すべて" || p.category === state.filter);
+  const cards = h("div", { class: "cards" }, shown.map((p) => {
+    const c = catOf(p.category);
+    const on = state.adopted.has(p.id);
+    return h("article", { class: "card" + (on ? " adopted" : "") },
+      h("div", { class: "card-top" },
+        h("span", { class: "cat", style: `background:var(${c.var})` }, p.category),
+        h("span", { class: "kind" }, c.kind),
+        h("span", { class: "rank " + p.rank, title: "おすすめ度" }, p.rank)),
+      h("h3", null, p.title),
+      p.context && h("p", { class: "why" }, "現場条件：" + p.context),
+      h("p", { class: "body" }, p.content),
+      h("dl", null,
+        h("dt", null, "効果"), h("dd", null, p.effect || "—"),
+        h("dt", null, "記録"), h("dd", null, p.evidence || "—"),
+        h("dt", null, "根拠"), h("dd", null, p.ref ? h("span", { class: "ref" }, p.ref) : "—")),
+      h("div", { class: "card-foot" },
+        h("label", { class: "adopt" },
+          h("input", { type: "checkbox", id: "adopt-" + p.id, checked: on, onchange: (e) => {
+            e.target.checked ? state.adopted.add(p.id) : state.adopted.delete(p.id);
+            if (!state.isSample) store.set("soui:last", { ...(store.get("soui:last") || {}), result: state.result, adopted: [...state.adopted] });
+            renderResult();
+          } }), "採用する"),
+        h("span", { class: "cost" }, "概算コスト：" + p.cost)));
+  }));
+  const nAdopt = state.adopted.size;
+  $("result").replaceChildren(
+    h("div", { class: "overview", style: "margin-top:14px" },
+      h("div", { class: "panel" },
+        h("h3", null, "現場の読み取り結果"),
+        ov.summary && h("p", null, ov.summary),
+        h("dl", { class: "kv" },
+          h("dt", null, "主な工種"), h("dd", null, ov.works.join("、") || "—"),
+          h("dt", null, "現場条件"), h("dd", null, list(ov.conditions)),
+          h("dt", null, "特記の義務"), h("dd", null, list(ov.obligations)))),
+      h("div", { class: "panel" },
+        h("h3", null, "施工計画書で確認したい点"),
+        R.gaps.length ? h("ul", { class: "gaps" }, R.gaps.map((g) => h("li", null, h("b", null, g.title), h("span", null, g.detail, " "), g.ref && h("span", { class: "ref" }, g.ref)))) : h("p", { class: "note" }, "特にありません"))),
+    h("h3", { style: "font-size:17px;margin:26px 0 10px" }, `創意工夫・社会性等の提案 ${R.proposals.length}件`),
+    filters, cards,
+    !state.isSample && h("div", { class: "refine" },
+      h("input", { id: "refine", placeholder: lastFacts ? "条件を変えて再提案（例：安全衛生をもっと厚く／費用の小さい案だけ）" : "再提案するには、もう一度「解析して提案を作成」を実行してください", disabled: !lastFacts }),
+      h("button", { class: "btn ghost", type: "button", disabled: !lastFacts, onclick: () => { const v = $("refine").value.trim(); if (v) analyze(v); } }, "再提案")),
+    h("div", { class: "export" },
+      h("span", { class: "count" }, "採用 ", h("b", null, nAdopt), " 件"),
+      h("button", { class: "btn small", type: "button", disabled: !nAdopt, onclick: exportXlsx }, "Excelに出力"),
+      h("button", { class: "btn ghost", type: "button", disabled: !nAdopt, onclick: copyText }, "文章をコピー"),
+      h("span", { class: "note", id: "export-note" }, state.isSample ? "サンプルでも出力を試せます" : "")));
+}
+
+function adoptedList() {
+  return state.result.proposals.filter((p) => state.adopted.has(p.id))
+    .sort((a, b) => CATS.findIndex((c) => c.key === a.category) - CATS.findIndex((c) => c.key === b.category));
+}
+
+function exportXlsx() {
+  const note = $("export-note");
+  if (!window.XLSX) { note.textContent = "Excel出力ライブラリを読み込めませんでした（ネット接続を確認）"; return; }
+  const name = $("m-name").value.trim() || "工事名未入力";
+  const ws = XLSX.utils.aoa_to_sheet([
+    ["創意工夫・社会性等に関する実施状況（下書き）"],
+    ["工事名", name], ["発注者", $("m-owner").value], ["作成日", new Date().toLocaleDateString("ja-JP")], [],
+    ["No", "項目", "評価内容", "提案名", "実施内容", "効果", "写真・記録", "根拠資料", "概算コスト", "おすすめ度"],
+    ...adoptedList().map((p, i) => [i + 1, catOf(p.category).kind, p.category, p.title, p.content, p.effect, p.evidence, p.ref, p.cost, p.rank]),
+  ]);
+  ws["!cols"] = [4, 10, 12, 24, 60, 30, 30, 24, 8, 8].map((w) => ({ wch: w }));
+  const ov = state.result.overview;
+  const ws2 = XLSX.utils.aoa_to_sheet([
+    ["工事概要", ov.summary], [],
+    ["主な工種"], ...ov.works.map((x) => ["", x]), [],
+    ["現場条件"], ...ov.conditions.map((x) => ["", x]), [],
+    ["特記で義務付けられている事項"], ...ov.obligations.map((x) => ["", x]), [],
+    ["施工計画書で確認したい点", "内容", "根拠"], ...state.result.gaps.map((g) => [g.title, g.detail, g.ref]),
+  ]);
+  ws2["!cols"] = [{ wch: 26 }, { wch: 70 }, { wch: 24 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "実施状況");
+  XLSX.utils.book_append_sheet(wb, ws2, "現場条件");
+  XLSX.writeFile(wb, `創意工夫_${name.replace(/[\\/:*?"<>|]/g, "_").slice(0, 40)}.xlsx`);
+  note.textContent = "Excelを保存しました（ダウンロードフォルダ）";
+}
+
+async function copyText() {
+  const txt = adoptedList().map((p, i) =>
+    `${i + 1}. 【${catOf(p.category).kind}／${p.category}】${p.title}\n${p.content}\n効果：${p.effect}\n記録：${p.evidence}`).join("\n\n");
+  const note = $("export-note");
+  try { await navigator.clipboard.writeText(txt); note.textContent = "コピーしました"; }
+  catch {
+    const ta = h("textarea", { style: "width:100%;min-height:200px;margin-top:10px" });
+    ta.value = txt; $("result").append(ta); ta.select();
+    note.textContent = "下の欄を選択してコピーしてください";
+  }
+}
+
+/* ---------- サンプル ---------- */
+const SAMPLE = {
+  overview: {
+    summary: "市道○○線の拡幅に伴う道路改良工事（架空の例）。延長L=320mで、片側に小学校の通学路、もう一方に農業用水路が並行する。",
+    works: ["道路土工 掘削1,850m³", "L型擁壁 H=1.5〜2.8m 延長140m", "排水構造物 U型側溝 320m", "舗装工 As 2,400m²"],
+    conditions: ["起点側150mが小学校の通学路（7:30〜8:15は通行規制不可）", "終点側に農業用水路が並行（4〜9月は通水期）", "擁壁区間の背面に民家が近接（離隔2〜4m）", "上空に高圧の架空線あり（No.8〜No.11付近）"],
+    obligations: ["片側交互通行時は交通誘導警備員A 2名以上", "低騒音型・排出ガス対策型建設機械の使用", "週休2日（4週8休）の確保"],
+  },
+  gaps: [
+    { title: "架空線付近の作業手順", detail: "No.8〜11付近でバックホウを使う作業の防護措置と監視体制が計画書にない。", ref: "図面 p.4" },
+    { title: "通水期の水路養生", detail: "4〜9月の濁水流出対策が一般的な記載にとどまる。", ref: "特記 p.12" },
+  ],
+  proposals: [
+    { id: "p0", category: "安全衛生", title: "架空線接触防止の高さ制限ゲートと警報装置", context: "No.8〜11付近に高圧の架空線が横断している", content: "架空線の手前に高さ制限ゲートを設置し、バックホウには設定高さを超えると警報を出してアームを自動停止する装置を搭載する。朝礼で当日の架空線近接作業を周知し、作業の前後で離隔を確認・記録する。", effect: "架空線接触ゼロ。離隔確認を毎日記録", ref: "図面 p.4", evidence: "ゲート設置写真、警報作動試験の動画、日々の離隔記録", cost: "中", rank: "A" },
+    { id: "p1", category: "地域貢献", title: "登校時間帯の作業休止と見守り", context: "起点側150mが小学校の通学路", content: "7:30〜8:15は重機作業と車両の出入りを止め、交通誘導警備員とは別に現場職員1名が通学路の見守りに立つ。工事内容を説明するチラシを学校経由で配布する。", effect: "児童の通行と工事車両が交錯しない", ref: "図面 p.2、特記 p.8", evidence: "見守りの状況写真、学校との協議記録、配布したチラシ", cost: "小", rank: "A" },
+    { id: "p2", category: "環境", title: "濁水処理（凝集沈殿）ユニットの設置", context: "並行する農業用水路の通水期と工期が重なる", content: "掘削区間の湧水や雨水は仮設の釜場に集め、凝集剤を使う小型の沈殿ユニットで処理してから放流する。放流口では濁度計で毎日測定し、基準を超えたら作業を止める。", effect: "水路の濁りに関する苦情ゼロ。濁度を数値で管理", ref: "図面 p.3、特記 p.12", evidence: "ユニット設置写真、濁度の測定記録", cost: "中", rank: "B" },
+    { id: "p3", category: "品質", title: "擁壁コンクリートの養生温度の見える化", context: "擁壁の施工が冬期（12〜2月）に当たる", content: "型枠内に無線温度センサーを埋め込み、打設後の温度をスマートフォンで常時監視する。設定温度を下回ると通知が届き、給熱養生を追加できる体制とする。", effect: "初期凍害の防止。養生記録の自動作成", ref: "図面 p.6", evidence: "センサー設置写真、温度履歴のグラフ", cost: "小", rank: "A" },
+    { id: "p4", category: "施工", title: "L型擁壁のプレキャスト化による工期短縮", context: "背面に民家が近接し、作業期間の短縮が求められる", content: "場所打ちの擁壁のうちH=2.0m以下の区間をプレキャスト製品に変更する協議を行い、現場での型枠・打設の作業を減らす。据付けはラフタークレーンで行い、夜間の仮置きはしない。", effect: "該当区間の工期を約40％短縮", ref: "図面 p.6", evidence: "施工前後の比較写真、工程の比較表", cost: "大", rank: "B" },
+    { id: "p5", category: "ICT・新技術", title: "UAVによる出来形管理と住民への説明", context: "延長320mの線形の現場で、住民への説明の機会が多い", content: "UAVの写真測量で施工前・中・後の3次元モデルを作り、土量と出来形を管理する。同じモデルを町内会への工事説明にも使い、完成後の姿をわかりやすく示す。", effect: "出来形測量の人員を削減。説明会での理解促進", ref: "図面 p.1", evidence: "3次元モデルの画像、説明会の写真", cost: "中", rank: "C" },
+  ],
+};
+
+/* ---------- 初期化 ---------- */
+for (const type of Object.keys(TYPES)) {
+  const input = $("f-" + type);
+  input.addEventListener("change", () => { addFiles(type, [...input.files]); input.value = ""; });
+  const zone = document.querySelector(`.drop[data-type="${type}"]`);
+  zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("over"); });
+  zone.addEventListener("dragleave", () => zone.classList.remove("over"));
+  zone.addEventListener("drop", (e) => { e.preventDefault(); zone.classList.remove("over"); addFiles(type, [...e.dataTransfer.files]); });
+}
+$("run").addEventListener("click", () => analyze(null));
+$("stop").addEventListener("click", () => ctl?.abort());
+// ページ外へのドロップでPDFが開いてしまうのを防ぐ
+window.addEventListener("dragover", (e) => e.preventDefault());
+window.addEventListener("drop", (e) => e.preventDefault());
+
+const last = store.get("soui:last");
+if (last?.result?.proposals?.length) {
+  state.result = last.result; state.isSample = false;
+  state.adopted = new Set(last.adopted || []);
+  if (last.name) $("m-name").value = last.name;
+  $("stamp").textContent = "前回の結果を表示中 · " + new Date(last.at).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+} else {
+  state.result = SAMPLE; state.adopted = new Set(["p0", "p1", "p3"]);
+}
+$("model").value = model;
+$("model").addEventListener("change", () => { model = $("model").value; store.set("soui:model", model); });
+renderAuth();
+renderResult();
+updateRun();
+</script>
+</body>
+</html>
