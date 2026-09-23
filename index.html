@@ -299,6 +299,8 @@ footer p{margin:0 0 6px;max-width:72ch}
       <div class="field"><label for="m-name">工事名</label><input id="m-name" placeholder="例：国道○号 ○○地区道路改良工事"></div>
       <div class="field"><label for="m-owner">発注者</label>
         <select id="m-owner"><option>国土交通省（直轄）</option><option>都道府県</option><option>市区町村</option><option>その他（NEXCO・機構など）</option></select></div>
+      <div class="field"><label for="m-to">提出先（宛名）</label><input id="m-to" value="厚木市長"></div>
+      <div class="field"><label for="m-contractor">請負者名</label><input id="m-contractor" placeholder="例：○○建設株式会社"></div>
       <div class="field"><label for="m-period">工期・施工時期</label><input id="m-period" placeholder="例：2026年10月〜2027年3月"></div>
       <div class="field wide"><label for="m-focus">重点にしたいこと（任意）</label><textarea id="m-focus" rows="2" placeholder="例：通学路に面しているので第三者対策を厚く。ICT施工は協力会社の都合で難しい。"></textarea></div>
     </div>
@@ -320,7 +322,7 @@ footer p{margin:0 0 6px;max-width:72ch}
   </section>
 
   <section class="step" aria-labelledby="s3" id="result-sec">
-    <div class="step-head"><span class="step-no">STEP 3</span><h2 id="s3">提案を選んで出力</h2><p>採用する提案にチェック → Excel（実施状況の下書き）に出力</p></div>
+    <div class="step-head"><span class="step-no">STEP 3</span><h2 id="s3">提案を選んで出力</h2><p>採用する提案にチェック → 実施状況報告書（表・説明資料）のExcelに出力</p></div>
     <div class="banner" id="sample-banner">いま表示しているのは<b>サンプル</b>（架空の道路改良工事）です。資料を読み込んで解析すると置き換わります。</div>
     <div id="result"></div>
   </section>
@@ -332,7 +334,7 @@ footer p{margin:0 0 6px;max-width:72ch}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script type="module">
 // 配布用ファイルを作るため、読み込み直後のページをそのまま控えておく
@@ -342,14 +344,20 @@ const PART_BYTES = 14 * 1024 * 1024;     // 1回に送る最大PDFサイズ（ba
 const FACT_BUDGET = 60000;               // 提案作成に渡す事実の最大文字数
 
 const TYPES = { drawing: "図面", spec: "特記仕様書", plan: "施工計画書" };
+// 提出様式の「項目」と「評価内容」（表の並び順）
 const CATS = [
-  { key: "施工", var: "--c-seko", kind: "創意工夫" },
-  { key: "品質", var: "--c-hinshitsu", kind: "創意工夫" },
-  { key: "安全衛生", var: "--c-anzen", kind: "創意工夫" },
-  { key: "環境", var: "--c-kankyo", kind: "創意工夫" },
-  { key: "ICT・新技術", var: "--c-ict", kind: "創意工夫" },
-  { key: "地域貢献", var: "--c-chiiki", kind: "社会性等" },
+  ...["施工規模", "構造物固有", "技術固有", "自然・地盤条件", "周辺環境等、社会条件", "現場での対応", "その他"].map((key) => ({ kind: "工事特性", key, var: "--c-ict" })),
+  { kind: "創意工夫", key: "準備後片付け", var: "--c-kankyo" },
+  { kind: "創意工夫", key: "施工関係", var: "--c-seko" },
+  { kind: "創意工夫", key: "品質関係", var: "--c-hinshitsu" },
+  { kind: "創意工夫", key: "安全衛生関係", var: "--c-anzen" },
+  { kind: "創意工夫", key: "施工管理関係", var: "--c-seko" },
+  { kind: "創意工夫", key: "その他", var: "--c-kankyo" },
+  { kind: "社会性等", key: "地域への貢献等", var: "--c-chiiki" },
 ];
+const FORM_KINDS = ["工事特性", "創意工夫", "社会性等"];
+// 以前の版の区分 → 様式の区分
+const OLD_CATS = { "施工": ["創意工夫", "施工関係"], "品質": ["創意工夫", "品質関係"], "安全衛生": ["創意工夫", "安全衛生関係"], "環境": ["社会性等", "地域への貢献等"], "ICT・新技術": ["創意工夫", "施工管理関係"], "地域貢献": ["社会性等", "地域への貢献等"] };
 const KINDS = ["概要", "工種数量", "現場条件", "制約", "品質", "安全", "環境", "義務事項", "計画内容", "その他"];
 const $ = (id) => document.getElementById(id);
 
@@ -693,8 +701,9 @@ const SYNTH_SCHEMA = OBJ({
   }),
   gaps: T("ARRAY", { items: OBJ({ title: S("短い見出し"), detail: S("内容"), ref: S("根拠の資料名とページ") }) }),
   proposals: T("ARRAY", { items: OBJ({
-    category: T("STRING", { enum: CATS.map((c) => c.key) }),
-    title: S("20字程度の提案名"), context: S("対応する現場条件（1文）"),
+    kind: T("STRING", { enum: FORM_KINDS, description: "様式の「項目」" }),
+    category: T("STRING", { enum: [...new Set(CATS.map((c) => c.key))], description: "様式の「評価内容」。kindに属するものを選ぶ" }),
+    title: S("20字程度の提案内容の見出し"), context: S("対応する現場条件（1文）"),
     content: S("実施状況に転記できる、である調の具体的内容（120〜200字）"),
     effect: S("期待される効果（数値目安があれば）"), ref: S("根拠の資料名とページ"),
     evidence: S("評価のために残す写真・記録"),
@@ -731,7 +740,12 @@ ${focus ? "担当者の要望: " + focus + "\n" : ""}${refine ? "今回の追加
 - 特記仕様書・共通仕様書で受注者に義務付けられている事項（義務事項）は、そのままでは創意工夫として評価されない。提案するのはそれを上回る工夫のみとし、義務との差分をcontentに明記する。
 - 施工計画書にすでにある内容（計画内容）と重複する提案はしない。計画を具体化・高度化する提案なら可。
 - 一般論は避け、必ず根拠となる事実に結び付け、refに資料名とページを書く。
-- categoryは「施工」「品質」「安全衛生」「環境」「ICT・新技術」（以上は創意工夫）、「地域貢献」（社会性等）。偏りなく合計12件前後。
+- kind（項目）とcategory（評価内容）は、提出様式「工事特性・創意工夫・社会性等に関する実施状況報告書」の区分から選ぶ。
+  ・工事特性（工事全体を通して、他の類似工事に比べて特異な技術力を要した条件とその対応）：施工規模／構造物固有（複雑な形状の構造物、既設構造物の補強、特殊な撤去）／技術固有（特殊な工種・工法、新工法・新材料の適用）／自然・地盤条件（湧水・地下水、軟弱地盤、制約の厳しい工事用道路・作業スペース、気象）／周辺環境等、社会条件（地中障害物、鉄道・供用中の道路・建築物の近接施工、現道上の交通規制、廃棄物処理）／現場での対応（災害時の臨機の処置、施工条件の変化への対応）／その他
+  ・創意工夫（工事特性で評価するほどでない軽微な工夫）：準備後片付け／施工関係（機械・器具・工具・装置類、2次製品・代替製品、施工方法、施工環境の改善、施工管理・品質管理）／品質関係／安全衛生関係（安全施設・仮設備、安全教育・講習会・パトロール、作業環境の改善、交通事故防止）／施工管理関係／その他
+  ・社会性等：地域への貢献等（自然環境の保全・動植物の保護、現場環境の地域への調和、地域住民とのコミュニケーション、ボランティア）
+- 件数の目安：工事特性は資料で裏付けられる特異な条件がある場合のみ2〜4件、創意工夫は8件前後（評価内容が偏らないように）、社会性等は2〜3件。
+- 工事特性のcontentは「どのような特異な条件があり、それにどう対応するか」を書く。
 - rankは、この現場での効果と実現性から A（強く推奨）/B/C。
 - gapsには、施工計画書で不足・未記載と思われる事項（施工計画書がない場合は、計画時に特に注意すべき事項）を最大6件。
 
@@ -879,8 +893,14 @@ async function analyze(refine) {
 }
 
 function normalize(r) {
+  const fix = (p) => {
+    if (CATS.some((c) => c.kind === p.kind && c.key === p.category)) return [p.kind, p.category];
+    if (OLD_CATS[p.category]) return OLD_CATS[p.category];
+    const kind = FORM_KINDS.includes(p.kind) ? p.kind : "創意工夫";
+    return [kind, kind === "社会性等" ? "地域への貢献等" : "その他"];
+  };
   const proposals = (r.proposals || []).filter((p) => p && p.title).map((p, i) => ({
-    id: "p" + i, category: p.category, title: String(p.title), context: String(p.context || ""), content: String(p.content || ""),
+    id: "p" + i, kind: fix(p)[0], category: fix(p)[1], title: String(p.title), context: String(p.context || ""), content: String(p.content || ""),
     effect: String(p.effect || ""), ref: String(p.ref || ""), evidence: String(p.evidence || ""), cost: p.cost, rank: p.rank,
   }));
   const ov = r.overview || {};
@@ -891,26 +911,26 @@ function normalize(r) {
 }
 
 /* ---------- 結果表示 ---------- */
-const catOf = (k) => CATS.find((c) => c.key === k) || CATS[0];
+const catOf = (p) => CATS.find((c) => c.kind === p.kind && c.key === p.category) || CATS[CATS.length - 2];
 function renderResult() {
   const R = state.result;
   $("sample-banner").hidden = !state.isSample;
   const ov = R.overview;
   const list = (arr) => arr.length ? h("ul", null, arr.map((x) => h("li", null, x))) : h("p", { class: "note" }, "—");
   const counts = { "すべて": R.proposals.length };
-  for (const p of R.proposals) counts[p.category] = (counts[p.category] || 0) + 1;
-  const filters = h("div", { class: "filters", role: "group", "aria-label": "区分で絞り込み" },
-    ["すべて", ...CATS.map((c) => c.key)].filter((k) => counts[k]).map((k) =>
+  for (const p of R.proposals) counts[p.kind] = (counts[p.kind] || 0) + 1;
+  const filters = h("div", { class: "filters", role: "group", "aria-label": "項目で絞り込み" },
+    ["すべて", ...FORM_KINDS].filter((k) => counts[k]).map((k) =>
       h("button", { class: "chip", type: "button", "aria-pressed": String(state.filter === k), onclick: () => { state.filter = k; renderResult(); } },
         k, h("span", { class: "n" }, counts[k]))));
-  const shown = R.proposals.filter((p) => state.filter === "すべて" || p.category === state.filter);
+  const shown = R.proposals.filter((p) => state.filter === "すべて" || p.kind === state.filter);
   const cards = h("div", { class: "cards" }, shown.map((p) => {
-    const c = catOf(p.category);
+    const c = catOf(p);
     const on = state.adopted.has(p.id);
     return h("article", { class: "card" + (on ? " adopted" : "") },
       h("div", { class: "card-top" },
         h("span", { class: "cat", style: `background:var(${c.var})` }, p.category),
-        h("span", { class: "kind" }, c.kind),
+        h("span", { class: "kind" }, p.kind),
         h("span", { class: "rank " + p.rank, title: "おすすめ度" }, p.rank)),
       h("h3", null, p.title),
       p.context && h("p", { class: "why" }, "現場条件：" + p.context),
@@ -941,7 +961,7 @@ function renderResult() {
       h("div", { class: "panel" },
         h("h3", null, "施工計画書で確認したい点"),
         R.gaps.length ? h("ul", { class: "gaps" }, R.gaps.map((g) => h("li", null, h("b", null, g.title), h("span", null, g.detail, " "), g.ref && h("span", { class: "ref" }, g.ref)))) : h("p", { class: "note" }, "特にありません"))),
-    h("h3", { style: "font-size:17px;margin:26px 0 10px" }, `創意工夫・社会性等の提案 ${R.proposals.length}件`),
+    h("h3", { style: "font-size:17px;margin:26px 0 10px" }, `工事特性・創意工夫・社会性等の提案 ${R.proposals.length}件`),
     filters, cards,
     !state.isSample && h("div", { class: "refine" },
       h("input", { id: "refine", placeholder: lastFacts ? "条件を変えて再提案（例：安全衛生をもっと厚く／費用の小さい案だけ）" : "再提案するには、もう一度「解析して提案を作成」を実行してください", disabled: !lastFacts }),
@@ -955,39 +975,108 @@ function renderResult() {
 
 function adoptedList() {
   return state.result.proposals.filter((p) => state.adopted.has(p.id))
-    .sort((a, b) => CATS.findIndex((c) => c.key === a.category) - CATS.findIndex((c) => c.key === b.category));
+    .sort((a, b) => CATS.indexOf(catOf(a)) - CATS.indexOf(catOf(b)));
 }
 
-function exportXlsx() {
+// 提出様式「工事特性・創意工夫・社会性等に関する実施状況報告書」のレイアウト（元のExcel様式から罫線・フォント・結合・行高を写したもの）
+const FORM = {"widths":[20.0,25.75,6.12,14.75,13.75,9.5],"front":{"rows":[{"h":21.0,"c":[[0,"厚木市長　"],[1,null],[1,null],[1,null],[1,null],[2,"（表)"]]},{"h":20.25,"c":[[1,null],[1,null],[1,null],[1,null],[1,null],[1,null]]},{"h":24.0,"c":[[1,null],[1,null],[3,"請負者名　　                          ㊞ "],[4,null],[4,null],[4,null]]},{"h":9.0,"c":[[1,null],[1,null],[1,null],[1,null],[1,null],[1,null]]},{"h":30.0,"c":[[3,"  工事名"],[3,null],[3,null],[3,null],[3,null],[3,null]]},{"h":30.0,"c":[[5,"工事特性・創意工夫・社会性等に関する実施状況報告書 "],[5,null],[5,null],[5,null],[5,null],[5,null]]},{"h":26.25,"c":[[6,"項　　目 "],[7,"評 価 内 容 "],[7,"備　　　　考 "],[8,null],[8,null],[9,null]]},{"h":22.5,"c":[[10,"   工事特性\n   工事全体を通し\n   て他の類似工事\n   に比べて、特異\n   な技術力 "],[11,"   施工規模 "],[12,null],[13,null],[13,null],[14,null]]},{"h":34.5,"c":[[15,null],[16,"　 構造物固有 "],[17,"複雑な形状の構造物\n既設構造物の補強、特殊な撤去工事 "],[18,null],[18,null],[19,null]]},{"h":39.75,"c":[[20,null],[16,"　 技術固有 "],[17,"特殊な工種及び工法 \n新工法(機器類を含む)及び新材料の適用 "],[18,null],[18,null],[19,null]]},{"h":68.25,"c":[[20,null],[16,"　 自然・地盤条件"],[17,"湧水、地下水の影響 \n軟弱地盤、支持基盤の状況 \n制約の厳しい工事用道路・作業スペース等\n気象現象の影響 "],[18,null],[18,null],[19,null]]},{"h":68.25,"c":[[20,null],[16,"　 周辺環境等、社会条件 "],[17,"埋設物等の地中内の作業障害物\n鉄道・供用中の道路・建築物等の近接施工\n作業スペース制約・現道上の交通規制 \n廃棄物処理 "],[18,null],[18,null],[19,null]]},{"h":38.25,"c":[[20,null],[16,"　 現場での対応 "],[17,"災害等での臨機の処置 \n施工状況（条件）の変化の対応 "],[18,null],[18,null],[19,null]]},{"h":22.5,"c":[[20,null],[16,"　 その他 "],[17,null],[18,null],[18,null],[19,null]]},{"h":21.75,"c":[[15,"   創意工夫\n   ｢工事特性｣で評\n   価するほどでな\n   い軽微な工夫  "],[16,"　 準備後片付け"],[17,null],[18,null],[18,null],[19,null]]},{"h":75.75,"c":[[20,null],[16,"　 施工関係 "],[17,"施工に伴う機械、器具、工具、装置類 \n２次製品、代替製品の利用 \n施工方法の工夫 \n施工環境の改善 \n施工管理、品質管理の工夫 "],[18,null],[18,null],[19,null]]},{"h":21.75,"c":[[20,null],[16,"　 品質関係 "],[17,null],[18,null],[18,null],[19,null]]},{"h":63.0,"c":[[20,null],[16,"　 安全衛生関係 "],[17,"安全施設・仮設備の配慮 \n安全教育・講習会・パトロールの工夫 \n作業環境の改善\n交通事故防止の工夫 "],[18,null],[18,null],[19,null]]},{"h":22.5,"c":[[20,null],[16,"　 施工管理関係 "],[17,null],[18,null],[18,null],[19,null]]},{"h":22.5,"c":[[20,null],[16,"　 その他 "],[17,null],[18,null],[18,null],[19,null]]},{"h":62.25,"c":[[21,"   社会性等\n   地域社会や住民\n   に対する貢献"],[22,"　 地域への貢献等"],[23,"地域の自然環境保全、動植物の保護\n現場環境の地域への調和\n地域住民とのコミュニケーション\nボランティアの実施 "],[24,null],[24,null],[25,null]]},{"h":21.0,"c":[[3,"備考　1 該当する項目の□にレマークを記入すること。 "],[26,null],[26,null],[1,null],[1,null],[1,null]]},{"h":21.0,"c":[[3,"　　　2 具体的内容の説明として、写真・ポンチ絵等を説明資料に整理すること。"],[26,null],[26,null],[1,null],[1,null],[1,null]]}],"merges":[[4,0,4,5],[14,0,19,0],[7,0,13,0],[15,2,15,5],[16,2,16,5],[17,2,17,5],[18,2,18,5],[5,0,5,5],[11,2,11,5],[19,2,19,5],[13,2,13,5],[14,2,14,5],[12,2,12,5],[2,2,2,5],[20,2,20,5],[7,2,7,5],[8,2,8,5],[9,2,9,5],[10,2,10,5],[6,2,6,5]]},"back":{"rows":[{"h":18.0,"c":[[1,null],[1,null],[1,null],[1,null],[1,null],[2,"(裏)"]]},{"h":30.0,"c":[[0,"工事特性・創意工夫・社会性等に関する実施状況（説明資料） "],[1,null],[1,null],[1,null],[1,null],[1,null]]},{"h":24.0,"c":[[27,"工　事　名"],[28,null],[29,null],[29,null],[29,null],[30,null]]},{"h":24.0,"c":[[31,"項目"],[32,null],[32,null],[33,null],[33,null],[34,null]]},{"h":24.0,"c":[[31,"提案内容"],[32,null],[32,null],[35,"評価内容"],[36,null],[37,null]]},{"h":182.25,"c":[[15,"（説明）"],[38,null],[38,null],[33,null],[33,null],[34,null]]},{"h":381.0,"c":[[39,"（添付図）"],[40,null],[40,null],[41,null],[41,null],[42,null]]},{"h":71.25,"c":[[43,null],[44,null],[44,null],[44,null],[44,null],[45,null]]},{"h":25.5,"c":[[46,"備考 　説明資料は簡素に作成するものとし、必要に応じて別葉とする。"],[46,null],[46,null],[46,null],[46,null],[46,null]]}],"merges":[[2,1,2,5],[8,0,8,5],[5,0,5,5],[4,1,4,2],[4,4,4,5],[6,0,7,5],[3,1,3,5]]},"fonts":["ＭＳ 明朝","ＭＳ Ｐゴシック","ＭＳ 明朝","ＭＳ Ｐゴシック","ＭＳ 明朝"],"sizes":[12,12,10,11,14],"styles":[[0,null,null,null,null,null,"middle",false],[1,null,null,null,null,null,"middle",false],[2,null,null,null,null,"right","top",false],[0,null,null,null,null,"left","middle",false],[3,null,null,null,null,null,"middle",false],[4,null,null,null,"medium","center","middle",false],[0,"medium","medium","thin","thin","center","middle",true],[0,"thin","medium","thin","thin","center","middle",true],[3,"thin","medium","thin","thin",null,"middle",false],[3,"thin","medium","medium","thin",null,"middle",false],[0,"medium",null,"thin","thin","justify","top",true],[0,"thin",null,"thin","thin","justify","top",true],[0,"thin",null,"thin","thin","left","top",true],[3,"thin",null,"thin","thin","left","middle",false],[3,"thin",null,"medium","thin","left","middle",false],[0,"medium","thin","thin","thin","justify","top",true],[0,"thin","thin","thin","thin","justify","top",true],[0,"thin","thin","thin","thin","left","top",true],[3,"thin","thin","thin","thin","left","middle",false],[3,"thin","thin","medium","thin","left","middle",false],[1,"medium","thin","thin","thin",null,"top",true],[0,"medium","thin","thin","medium","justify","top",true],[0,"thin","thin","thin","medium","justify","top",true],[0,"thin","thin","thin","medium","left","top",true],[3,"thin","thin","thin","medium","left","middle",false],[3,"thin","thin","medium","medium","left","middle",false],[1,null,null,null,null,"left","middle",false],[0,"medium","medium","thin","thin","distributed","middle",true],[0,"thin","medium",null,"thin","justify","middle",true],[0,null,"medium",null,"thin","justify","middle",true],[0,null,"medium","medium","thin","justify","middle",true],[0,"medium","thin","thin","thin","distributed","middle",true],[0,"thin","thin","thin","thin","justify","middle",true],[3,"thin","thin","thin","thin",null,"middle",false],[3,"thin","thin","medium","thin",null,"middle",false],[0,"thin","thin","thin","thin","distributed","middle",false],[1,"thin","thin","thin","thin",null,"middle",false],[1,"thin","thin","medium","thin",null,"middle",false],[3,"thin","thin","thin","thin","justify","middle",true],[0,"medium","thin",null,null,"justify","top",true],[3,null,"thin",null,null,"justify","middle",true],[3,null,"thin",null,null,null,"middle",false],[3,null,"thin","medium",null,null,"middle",false],[3,"medium",null,null,"thin",null,"middle",false],[3,null,null,null,"thin",null,"middle",false],[3,null,null,"medium","thin",null,"middle",false],[0,null,"thin",null,null,"left","bottom",true]]};
+
+function paintBlock(ws, block, startRow, fill) {
+  block.rows.forEach((row, i) => {
+    const R = ws.getRow(startRow + i);
+    R.height = row.h;
+    row.c.forEach(([si, v], c) => {
+      const [fi, bl, bt, br, bb, ha, va, wrap] = FORM.styles[si];
+      const cell = R.getCell(c + 1);
+      const val = fill(i, c, v);
+      if (val != null) cell.value = val;
+      cell.font = { name: FORM.fonts[fi], size: FORM.sizes[fi] };
+      const border = {};
+      if (bl) border.left = { style: bl };
+      if (bt) border.top = { style: bt };
+      if (br) border.right = { style: br };
+      if (bb) border.bottom = { style: bb };
+      cell.border = border;
+      cell.alignment = { horizontal: ha || undefined, vertical: va, wrapText: wrap };
+    });
+  });
+  block.merges.forEach(([r0, c0, r1, c1]) => ws.mergeCells(startRow + r0, c0 + 1, startRow + r1, c1 + 1));
+}
+
+const trimAll = (s) => String(s).replace(/^[\s　]+|[\s　]+$/g, "");
+const fileSafe = (s) => s.replace(/[\\/:*?"<>|]/g, "_").slice(0, 40);
+
+async function exportXlsx() {
   const note = $("export-note");
-  if (!window.XLSX) { note.textContent = "Excel出力ライブラリを読み込めませんでした（ネット接続を確認）"; return; }
-  const name = $("m-name").value.trim() || "工事名未入力";
-  const ws = XLSX.utils.aoa_to_sheet([
-    ["創意工夫・社会性等に関する実施状況（下書き）"],
-    ["工事名", name], ["発注者", $("m-owner").value], ["作成日", new Date().toLocaleDateString("ja-JP")], [],
-    ["No", "項目", "評価内容", "提案名", "実施内容", "効果", "写真・記録", "根拠資料", "概算コスト", "おすすめ度"],
-    ...adoptedList().map((p, i) => [i + 1, catOf(p.category).kind, p.category, p.title, p.content, p.effect, p.evidence, p.ref, p.cost, p.rank]),
-  ]);
-  ws["!cols"] = [4, 10, 12, 24, 60, 30, 30, 24, 8, 8].map((w) => ({ wch: w }));
+  if (!window.ExcelJS) { note.textContent = "Excel出力ライブラリを読み込めませんでした（ネット接続を確認）"; return; }
+  const name = $("m-name").value.trim();
+  const to = $("m-to").value.trim();
+  const contractor = $("m-contractor").value.trim();
+  const list = adoptedList();
+  const checked = new Set(list.map((p) => p.kind + "/" + p.category));
+
+  const wb = new ExcelJS.Workbook();
+  const page = (fitH) => ({ paperSize: 9, orientation: "portrait", fitToPage: true, fitToWidth: 1, fitToHeight: fitH,
+    margins: { left: 0.6, right: 0.5, top: 0.6, bottom: 0.5, header: 0.3, footer: 0.3 }, horizontalCentered: true });
+
+  // 表：該当する評価内容の□に印を付ける
+  const front = wb.addWorksheet("報告書（表）", { pageSetup: page(1), views: [{ showGridLines: false }] });
+  front.columns = FORM.widths.map((w) => ({ width: w }));
+  let kindRow = "";
+  paintBlock(front, FORM.front, 1, (i, c, v) => {
+    if (i === 0 && c === 0) return to ? to + "　" : v;
+    if (i === 2 && c === 2) return contractor ? `請負者名　${contractor}　　　　　　㊞` : v;
+    if (i === 4 && c === 0) return name ? `  工事名　${name}` : v;
+    if (c === 0 && v && i >= 7 && i <= 20) kindRow = FORM_KINDS.find((k) => trimAll(v).startsWith(k)) || kindRow;
+    if (c === 1 && v && i >= 7 && i <= 20) {
+      const label = trimAll(v);
+      return (checked.has(kindRow + "/" + label) ? "☑ " : "□ ") + label;
+    }
+    return v;
+  });
+
+  // 裏：採用した提案ごとに説明資料を1枚ずつ
+  const back = wb.addWorksheet("説明資料（裏）", { pageSetup: page(0), views: [{ showGridLines: false }] });
+  back.columns = FORM.widths.map((w) => ({ width: w }));
+  const per = FORM.back.rows.length;
+  list.forEach((p, n) => {
+    const start = 1 + n * per;
+    paintBlock(back, FORM.back, start, (i, c, v) => {
+      if (i === 0 && c === 5) return `(裏) ${n + 1}/${list.length}`;
+      if (i === 2 && c === 1) return name || null;
+      if (i === 3 && c === 1) return p.kind;
+      if (i === 4 && c === 1) return p.title;
+      if (i === 4 && c === 4) return p.category;
+      if (i === 5 && c === 0) return `（説明）\n${p.content}${p.effect ? `\n【効果】${p.effect}` : ""}`;
+      if (i === 6 && c === 0) return `（添付図）\n※ 貼付する写真・図の例：${p.evidence || "施工状況の写真、ポンチ絵"}`;
+      return v;
+    });
+    if (n < list.length - 1) back.getRow(start + per - 1).addPageBreak();
+  });
+
+  // 参考：AIが読み取った現場条件（提出用ではない）
   const ov = state.result.overview;
-  const ws2 = XLSX.utils.aoa_to_sheet([
+  const ref = wb.addWorksheet("参考_現場条件");
+  ref.columns = [{ width: 28 }, { width: 80 }, { width: 28 }];
+  ref.addRows([
     ["工事概要", ov.summary], [],
     ["主な工種"], ...ov.works.map((x) => ["", x]), [],
     ["現場条件"], ...ov.conditions.map((x) => ["", x]), [],
     ["特記で義務付けられている事項"], ...ov.obligations.map((x) => ["", x]), [],
-    ["施工計画書で確認したい点", "内容", "根拠"], ...state.result.gaps.map((g) => [g.title, g.detail, g.ref]),
+    ["施工計画書で確認したい点", "内容", "根拠"], ...state.result.gaps.map((g) => [g.title, g.detail, g.ref]), [],
+    ["採用した提案の根拠資料"], ...list.map((p) => [p.title, p.ref]),
   ]);
-  ws2["!cols"] = [{ wch: 26 }, { wch: 70 }, { wch: 24 }];
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "実施状況");
-  XLSX.utils.book_append_sheet(wb, ws2, "現場条件");
-  XLSX.writeFile(wb, `創意工夫_${name.replace(/[\\/:*?"<>|]/g, "_").slice(0, 40)}.xlsx`);
-  note.textContent = "Excelを保存しました（ダウンロードフォルダ）";
+  ref.eachRow((r) => r.eachCell((c) => { c.alignment = { vertical: "top", wrapText: true }; }));
+
+  const buf = await wb.xlsx.writeBuffer();
+  const a = h("a", { href: URL.createObjectURL(new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" })), download: `実施状況報告書_${fileSafe(name || "工事名未入力")}.xlsx` });
+  document.body.append(a); a.click(); a.remove();
+  note.textContent = `Excelを保存しました（表1枚＋説明資料${list.length}枚）`;
 }
 
 async function copyText() {
   const txt = adoptedList().map((p, i) =>
-    `${i + 1}. 【${catOf(p.category).kind}／${p.category}】${p.title}\n${p.content}\n効果：${p.effect}\n記録：${p.evidence}`).join("\n\n");
+    `${i + 1}. 【${p.kind}／${p.category}】${p.title}\n${p.content}\n効果：${p.effect}\n記録：${p.evidence}`).join("\n\n");
   const note = $("export-note");
   try { await navigator.clipboard.writeText(txt); note.textContent = "コピーしました"; }
   catch {
@@ -1015,6 +1104,7 @@ const SAMPLE = {
     { id: "p2", category: "環境", title: "濁水処理（凝集沈殿）ユニットの設置", context: "並行する農業用水路の通水期と工期が重なる", content: "掘削区間の湧水や雨水は仮設の釜場に集め、凝集剤を使う小型の沈殿ユニットで処理してから放流する。放流口では濁度計で毎日測定し、基準を超えたら作業を止める。", effect: "水路の濁りに関する苦情ゼロ。濁度を数値で管理", ref: "図面 p.3、特記 p.12", evidence: "ユニット設置写真、濁度の測定記録", cost: "中", rank: "B" },
     { id: "p3", category: "品質", title: "擁壁コンクリートの養生温度の見える化", context: "擁壁の施工が冬期（12〜2月）に当たる", content: "型枠内に無線温度センサーを埋め込み、打設後の温度をスマートフォンで常時監視する。設定温度を下回ると通知が届き、給熱養生を追加できる体制とする。", effect: "初期凍害の防止。養生記録の自動作成", ref: "図面 p.6", evidence: "センサー設置写真、温度履歴のグラフ", cost: "小", rank: "A" },
     { id: "p4", category: "施工", title: "L型擁壁のプレキャスト化による工期短縮", context: "背面に民家が近接し、作業期間の短縮が求められる", content: "場所打ちの擁壁のうちH=2.0m以下の区間をプレキャスト製品に変更する協議を行い、現場での型枠・打設の作業を減らす。据付けはラフタークレーンで行い、夜間の仮置きはしない。", effect: "該当区間の工期を約40％短縮", ref: "図面 p.6", evidence: "施工前後の比較写真、工程の比較表", cost: "大", rank: "B" },
+    { id: "p6", kind: "工事特性", category: "周辺環境等、社会条件", title: "高圧架空線と通学路に近接した擁壁施工", context: "擁壁区間の上空に高圧架空線、起点側は通学路", content: "擁壁区間（No.8〜No.11）は上空に高圧架空線が横断し、起点側150mは小学校の通学路に面する。クレーン作業は架空線の離隔を確保できる小型機に限定し、据付け手順を電力会社と協議して決めた。登校時間帯は作業を止め、片側交互通行の規制時間を短くする工程を組んだ。", effect: "近接施工での接触・第三者災害ゼロ", ref: "図面 p.2、p.4", evidence: "架空線と作業範囲の位置関係図、電力会社との協議記録", cost: "中", rank: "A" },
     { id: "p5", category: "ICT・新技術", title: "UAVによる出来形管理と住民への説明", context: "延長320mの線形の現場で、住民への説明の機会が多い", content: "UAVの写真測量で施工前・中・後の3次元モデルを作り、土量と出来形を管理する。同じモデルを町内会への工事説明にも使い、完成後の姿をわかりやすく示す。", effect: "出来形測量の人員を削減。説明会での理解促進", ref: "図面 p.1", evidence: "3次元モデルの画像、説明会の写真", cost: "中", rank: "C" },
   ],
 };
@@ -1036,12 +1126,17 @@ window.addEventListener("drop", (e) => e.preventDefault());
 
 const last = store.get("soui:last");
 if (last?.result?.proposals?.length) {
-  state.result = last.result; state.isSample = false;
+  state.result = normalize(last.result); state.isSample = false;
   state.adopted = new Set(last.adopted || []);
   if (last.name) $("m-name").value = last.name;
   $("stamp").textContent = "前回の結果を表示中 · " + new Date(last.at).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
 } else {
-  state.result = SAMPLE; state.adopted = new Set(["p0", "p1", "p3"]);
+  state.result = normalize(SAMPLE); state.adopted = new Set(["p0", "p1", "p3", "p5"]);
+}
+for (const id of ["m-to", "m-contractor"]) {
+  const v = store.get("soui:" + id);
+  if (typeof v === "string") $(id).value = v;
+  $(id).addEventListener("change", () => store.set("soui:" + id, $(id).value));
 }
 $("model").value = model;
 $("model").addEventListener("change", () => { model = $("model").value; store.set("soui:model", model); });
